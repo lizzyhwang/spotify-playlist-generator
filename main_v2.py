@@ -4,8 +4,10 @@ import json
 import config
 import random
 
-# main.py
-# searches for 50 playlists and chooses one random song from each
+# main_v2.py
+# goal: better, more cohesive playlist because we take multiple songs from the same playlist
+# searches for 10 playlists (presumably top 10), divides each into groups of 10 songs.
+# from each group of 10 songs, choose one song at random.
 # adds all of the randomly gathered songs to a playlist in your Spotify account
 # returns the link to your new playlist!
 
@@ -15,12 +17,12 @@ def main():
     spAuth.get_new_token()
 
     # welcome message
-    print("WELCOME TO EZ PLAYLIST GENERATOR")
+    print("WELCOME TO EZ PLAYLIST GENERATOR V2")
     searchTerm = input("Enter 1-3 words to describe the vibe for your playlist. > ").lower()
     
     try:
         print(f'Searching for {searchTerm} playlists...')
-        r = requests.get(f'https://api.spotify.com/v1/search?q={searchTerm}&type=playlist&limit=50', headers={'Authorization': f'Bearer {spAuth.token}'}) 
+        r = requests.get(f'https://api.spotify.com/v1/search?q={searchTerm}&type=playlist&limit=10', headers={'Authorization': f'Bearer {spAuth.token}'}) 
     except:
         print(f'\033[31m Internal error while searching for playlists relating to: {searchTerm}')
 
@@ -28,14 +30,14 @@ def main():
     data = r.json()
 
     # for each playlist, choose a random song
-    song_uris = []
+    song_uris = [] # list of list of song_uris
     print('Generating songs...')
     for p in data["playlists"]["items"]:
-        song_uris.append(getRandomSpotifySongFromPlaylist(p["id"], spAuth))
+        song_uris.append(getRandomSongsFromSpotifyPlaylist(p["id"], spAuth))
 
     # initialize new playlist
     new_playlist_id = createSpotifyPlaylist(searchTerm, spAuth)
-    # add all randomly chosen songs to playlist
+    # # add all randomly chosen songs to playlist
     addSongsToSpotifyPlaylist(spAuth, new_playlist_id, song_uris)
 
     # end message
@@ -43,19 +45,23 @@ def main():
     print(f'https://open.spotify.com/playlist/{new_playlist_id}')
 
 
-# returns a random song uri (string) from a given playlist
-def getRandomSpotifySongFromPlaylist(playlist_id: str, spAuth: SpotifyAuth):
+# returns a list of random song uris (strings) from a given playlist
+def getRandomSongsFromSpotifyPlaylist(playlist_id: str, spAuth: SpotifyAuth):
     endpoint_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
     r = requests.get(url = endpoint_url, headers={'Authorization': f'Bearer {spAuth.token}'})
     data = r.json()
+
     n = int(data["total"])
-    idx = random.randint(0,n-1)
+    playlist_chunks = [data["items"][i:i+10] for i in range(0, n, 10)]
 
-    # 100 limit on Spotify API
-    if idx > 99:
-        idx = 99
+    chosen_songs = [] # list of song_uris (string)
+    for song_list in playlist_chunks:
+        s = max(len(song_list) - 1, 0)
+        if s != 0:
+            idx = random.randint(0,s)
+            chosen_songs.append(song_list[idx]["track"]["uri"])
 
-    return data["items"][idx]["track"]["uri"]
+    return chosen_songs
 
 
 # return the playlist id (string) of new playlist
@@ -73,22 +79,25 @@ def createSpotifyPlaylist(keyword: str, spAuth: SpotifyAuth):
     #return playlist id
     return r.json()['id']
 
-# adds the list of songs to the given playlist
+# adds the list of songs (list of list of song_uris) to the given playlist
 def addSongsToSpotifyPlaylist(auth: SpotifyAuth, target_playlist_id: str, song_uris: list): 
-    num_added_songs = 0
     r = requests.put(f'https://api.spotify.com/v1/playlists/{target_playlist_id}/tracks',
                 headers={
                     "Authorization": f'Bearer {auth.token}',
                     "Content-Type": "application/json"
                     }, 
-                data=json.dumps({'uris': song_uris}))
+                data=json.dumps({'uris': song_uris[0]}))
+    
+    for i in range(1,10):
+        r = requests.post(f'https://api.spotify.com/v1/playlists/{target_playlist_id}/tracks',
+                    headers={
+                        "Authorization": f'Bearer {auth.token}',
+                        "Content-Type": "application/json"
+                        }, 
+                    data=json.dumps({'uris': song_uris[i]}))
     
     # Check if the request was successful and Print the output
     if(r.status_code == 201):
-        num_added_songs += len(song_uris)
-
-    # it should never get to this place
-    if(len(song_uris) - num_added_songs > 0):
-        print(f'\033[32m Could not find uris for {len(song_uris) - num_added_songs} songs')
+        print('Complete!')
 
 main()
