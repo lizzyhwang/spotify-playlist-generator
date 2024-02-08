@@ -1,0 +1,5 @@
+config.py
+config.sh
+
+__pycache__
+.DS_Store
