@@ -6,9 +6,10 @@ import random
 
 # main_v2.py
 # goal: better, more cohesive playlist because we take multiple songs from the same playlist
-# searches for 10 playlists (presumably top 10), divides each into groups of 10 songs.
+# searches for 10 playlists (presumably the top 10), divides each into groups of 10 songs.
 # from each group of 10 songs, choose one song at random.
-# adds all of the randomly gathered songs to a playlist in your Spotify account
+# add all of the randomly gathered songs to a playlist in your Spotify account
+# prints out the final playlist
 # returns the link to your new playlist!
 
 def main():

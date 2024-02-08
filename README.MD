@@ -34,4 +34,4 @@ client_secret = 'xxx'
 refresh_token = 'xxx'
 ```
 
-5. Start the script using `python3 main.py` in the terminal.
+5. Start the script using `python3 main_v2.py` in the terminal.
