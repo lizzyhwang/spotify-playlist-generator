@@ -21,7 +21,7 @@ def main():
     searchTerm = input("Enter 1-3 words to describe the vibe for your playlist. > ").lower()
     
     try:
-        print(f'Searching for {searchTerm} playlists...')
+        print(f'Searching through {searchTerm} playlists...')
         r = requests.get(f'https://api.spotify.com/v1/search?q={searchTerm}&type=playlist&limit=10', headers={'Authorization': f'Bearer {spAuth.token}'}) 
     except:
         print(f'\033[31m Internal error while searching for playlists relating to: {searchTerm}')
@@ -37,13 +37,33 @@ def main():
 
     # initialize new playlist
     new_playlist_id = createSpotifyPlaylist(searchTerm, spAuth)
-    # # add all randomly chosen songs to playlist
-    addSongsToSpotifyPlaylist(spAuth, new_playlist_id, song_uris)
+    if new_playlist_id != "":
+        # add all randomly chosen songs to playlist
+        addSongsToSpotifyPlaylist(spAuth, new_playlist_id, song_uris)
+
+    print(listNameandArtistFromSpotifyPlaylist(new_playlist_id, spAuth))
 
     # end message
-    print(f'Congratulations you just generated a new', searchTerm, 'playlist!')
+    print(f'Congratulations, you just generated a new', searchTerm, 'playlist!')
     print(f'https://open.spotify.com/playlist/{new_playlist_id}')
 
+# returns a string containing the list of all song titles with the artist.
+def listNameandArtistFromSpotifyPlaylist(playlist_id: str, spAuth: SpotifyAuth):
+    endpoint_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+    r = requests.get(url = endpoint_url, headers={'Authorization': f'Bearer {spAuth.token}'})
+    data = r.json()
+
+    n = int(data["total"])
+    songs = ""
+    if n < 100:
+        for i in range (0,n):
+            name = data["items"][i]["track"]["name"]
+            artist = data["items"][i]["track"]["artists"][0]["name"]
+            songs += f'{i+1}. {name} - {artist}\n'
+    else:
+        return("This playlist is huge! Click the link to view the whole playlist.")
+    
+    return songs
 
 # returns a list of random song uris (strings) from a given playlist
 def getRandomSongsFromSpotifyPlaylist(playlist_id: str, spAuth: SpotifyAuth):
@@ -68,14 +88,14 @@ def getRandomSongsFromSpotifyPlaylist(playlist_id: str, spAuth: SpotifyAuth):
 def createSpotifyPlaylist(keyword: str, spAuth: SpotifyAuth):
     endpoint_url = f"https://api.spotify.com/v1/users/{config.usrId}/playlists"
     request_body = json.dumps({
-            "name": "EZ PLAYLIST: " + keyword.capitalize(),
-            "description": "Programmatically generated " + keyword.lower() + " playlist!",
+            "name": "EZ PLAYLIST: " + keyword,
+            "description": "Programmatically generated " + keyword + " playlist!",
             "public": False # let's keep it between us - for now
             })
     r = requests.post(url = endpoint_url, data = request_body, headers={'Content-Type':'application/json', 'Authorization': f'Bearer {spAuth.token}'})
     if r.status_code != 201:
-        print("Error:", r.status_code)
-    
+        print("Error creating playlist:", r.status_code)
+        return ""
     #return playlist id
     return r.json()['id']
 
@@ -98,6 +118,6 @@ def addSongsToSpotifyPlaylist(auth: SpotifyAuth, target_playlist_id: str, song_u
     
     # Check if the request was successful and Print the output
     if(r.status_code == 201):
-        print('Complete!')
+        print('Playlist complete!')
 
 main()
