@@ -4,6 +4,14 @@
 
 A script designed to generate a Spotify playlist in your Spotify account, given a short description.
 
+## Credit
+
+This project was heavily based off of https://github.com/aikozim/applemusic-playlist-to-spotify.  I reused and modified their configuration and build process (`requirements.txt`, `README`, and `config.template.py`).  I also used their `SpotifyAuth` class, and used their main methods as a starting point for mine.
+
+Additional References:  
+* https://medium.com/analytics-vidhya/build-your-own-playlist-generator-with-spotifys-api-in-python-ceb883938ce4
+* https://developer.spotify.com/documentation/web-api
+
 ## Setup
 
 To use the script, follow the steps below:
@@ -26,32 +34,4 @@ client_secret = 'xxx'
 refresh_token = 'xxx'
 ```
 
-5. Create the Spotify playlists you want to mirror and fill in the information in `config.py`.
-``` python
-# https://open.spotify.com/playlist/4C0kEXdGkLuIDaBSVRjwpr?...
-#                                           ^ This is the playlist id
-playlists = [
-    {
-        'applemusic_playlist_url': 'https://music.apple.com/us/playlist/xxx/pl.xxx',
-        'spotify_playlist_id': 'xxx',
-    },
-    {
-        'applemusic_playlist_url': 'https://music.apple.com/us/playlist/xxx/pl.xxx',
-        'spotify_playlist_id': 'xxx',
-    },
-]
-```
-
-6. Start the script using `python3 main.py` in the terminal. The application will start mirroring all the playlists once. If you want to do this regularly, you can set up a scheduler like cron to run the script.
-
-7. Feel free to enable debug mode in the config if you want to see why songs are not matching.
- ``` python
-debug = True
-```   
-
-
-## ToDo (Please Send a PR, in case you anything)
-
-The following tasks still need to be completed:
-
-1. Cloning of image and description of playlists
+5. Start the script using `python3 main.py` in the terminal.
