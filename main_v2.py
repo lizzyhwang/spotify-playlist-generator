@@ -3,6 +3,8 @@ import requests
 import json
 import config
 import random
+import base64
+import pinterest
 
 # main_v2.py
 # goal: better, more cohesive playlist because we take multiple songs from the same playlist
@@ -20,6 +22,7 @@ def main():
     # welcome message
     print("WELCOME TO EZ PLAYLIST GENERATOR V2")
     searchTerm = input("Enter 1-3 words to describe the vibe for your playlist. > ").lower()
+    # pinterest.getPlaylistCoverImage(searchTerm)
     
     try:
         print(f'Searching through {searchTerm} playlists...')
@@ -38,6 +41,9 @@ def main():
 
     # initialize new playlist
     new_playlist_id = createSpotifyPlaylist(searchTerm, spAuth)
+
+    # commenting out: spotify api is not liking playlist cover calls
+    # addPlaylistCover(searchTerm, new_playlist_id, spAuth)
     if new_playlist_id != "":
         # add all randomly chosen songs to playlist
         addSongsToSpotifyPlaylist(spAuth, new_playlist_id, song_uris)
@@ -87,6 +93,7 @@ def getRandomSongsFromSpotifyPlaylist(playlist_id: str, spAuth: SpotifyAuth):
 
 # return the playlist id (string) of new playlist
 def createSpotifyPlaylist(keyword: str, spAuth: SpotifyAuth):
+    # create the playlist
     endpoint_url = f"https://api.spotify.com/v1/users/{config.usrId}/playlists"
     request_body = json.dumps({
             "name": "EZ PLAYLIST: " + keyword,
@@ -97,8 +104,23 @@ def createSpotifyPlaylist(keyword: str, spAuth: SpotifyAuth):
     if r.status_code != 201:
         print("Error creating playlist:", r.status_code)
         return ""
+
     #return playlist id
     return r.json()['id']
+
+def addPlaylistCover(searchTerm: str, playlistId: str, spAuth: SpotifyAuth):
+    pinterest.getPlaylistCoverImage(searchTerm)
+    endpoint_url = f"https://api.spotify.com/v1/playlists/{playlistId}/images"
+    print(endpoint_url)
+    filename = searchTerm.replace(" ", "_") + "_playlist_cover.jpeg"
+    print(filename)
+    filepath = "images/" + filename
+    with open(filepath, "rb") as f:
+        data = base64.b64encode(f.read())
+        print(data)
+    r = requests.put(url = endpoint_url, data = data, headers={'Content-Type':'image/jpeg', 'Authorization': f'Bearer {spAuth.token}'})
+    if r.status_code != 202:
+            print("Error uploading playlist cover:", r.status_code)
 
 # adds the list of songs (list of list of song_uris) to the given playlist
 def addSongsToSpotifyPlaylist(auth: SpotifyAuth, target_playlist_id: str, song_uris: list): 
@@ -120,5 +142,7 @@ def addSongsToSpotifyPlaylist(auth: SpotifyAuth, target_playlist_id: str, song_u
     # Check if the request was successful and Print the output
     if(r.status_code == 201):
         print('Playlist complete!')
+
+
 
 main()
