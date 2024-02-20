@@ -22,7 +22,6 @@ def main():
     # welcome message
     print("WELCOME TO EZ PLAYLIST GENERATOR V2")
     searchTerm = input("Enter 1-3 words to describe the vibe for your playlist. > ").lower()
-    # pinterest.getPlaylistCoverImage(searchTerm)
     
     try:
         print(f'Searching through {searchTerm} playlists...')
@@ -43,7 +42,7 @@ def main():
     new_playlist_id = createSpotifyPlaylist(searchTerm, spAuth)
 
     # commenting out: spotify api is not liking playlist cover calls
-    # addPlaylistCover(searchTerm, new_playlist_id, spAuth)
+    addPlaylistCover(searchTerm, new_playlist_id, spAuth)
     if new_playlist_id != "":
         # add all randomly chosen songs to playlist
         addSongsToSpotifyPlaylist(spAuth, new_playlist_id, song_uris)
@@ -116,9 +115,8 @@ def addPlaylistCover(searchTerm: str, playlistId: str, spAuth: SpotifyAuth):
     print(filename)
     filepath = "images/" + filename
     with open(filepath, "rb") as f:
-        data = base64.b64encode(f.read())
-        print(data)
-    r = requests.put(url = endpoint_url, data = data, headers={'Content-Type':'image/jpeg', 'Authorization': f'Bearer {spAuth.token}'})
+        data = base64.b64encode(f.read().strip())
+    r = requests.put(url=endpoint_url, data=data, headers={'Content-Type':'image/jpeg', 'Authorization': f'Bearer {spAuth.token}'})
     if r.status_code != 202:
             print("Error uploading playlist cover:", r.status_code)
 
