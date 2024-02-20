@@ -20,6 +20,8 @@ Additional References:
 
 To use the script, follow the steps below:
 
+0. Download or clone this repository, and navigate to the root directory `/spotify-playlist-generator`
+
 1. Install dependencies with `pip3 install -r requirements.txt`.
 
 2. Create a `config.py` file in the root directory. Clone `config.template.py` file to do so.
